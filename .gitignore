@@ -1,0 +1,7 @@
+/build
+/bin
+/assets/brickadia
+cmake-build-*/
+.idea/
+.vs/
+.vscode/
