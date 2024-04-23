@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vk_types.h>
+#include <utils.h>
 
 struct FrameData
 {
@@ -14,6 +15,8 @@ struct FrameData
 	VkSemaphore _swapchainSemaphore, _renderSemaphore;
 	// NOTE : Wait for rendering to be finished
 	VkFence _renderFence;
+
+	DeletionQueue _deletionQueue;
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -44,6 +47,10 @@ public:
 		return _frames[_frameNumber % FRAME_OVERLAP];
 	};
 
+	//draw resources
+	AllocatedImage _drawImage;
+	VkExtent2D _drawExtent;
+
 	VkQueue _graphicsQueue;
 	uint32_t _graphicsQueueFamily;
 
@@ -53,6 +60,10 @@ public:
 	VkExtent2D _windowExtent{ 1700, 900 };
 
 	struct SDL_Window* _window{ nullptr };
+
+	DeletionQueue _mainDeletionQueue;
+
+	VmaAllocator _allocator;
 
 	static VulkanEngine& Get();
 
@@ -64,6 +75,8 @@ public:
 
 	//draw loop
 	void draw();
+
+	void draw_background(VkCommandBuffer cmd);
 
 	//run main loop
 	void run();
