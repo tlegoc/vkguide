@@ -5,6 +5,7 @@
 
 #include <vk_types.h>
 #include <utils.h>
+#include <vk_descriptors.h>
 
 struct FrameData
 {
@@ -51,9 +52,21 @@ public:
 	AllocatedImage _drawImage;
 	VkExtent2D _drawExtent;
 
+	// Queue
 	VkQueue _graphicsQueue;
 	uint32_t _graphicsQueueFamily;
 
+	// VMA
+	VmaAllocator _allocator;
+
+	// Descriptor allocation
+	DescriptorAllocator globalDescriptorAllocator;
+
+	// Tutorial compute shader related, TODO Remove ?
+	VkDescriptorSet _drawImageDescriptors;
+	VkDescriptorSetLayout _drawImageDescriptorLayout;
+
+	// Engine data
 	bool _isInitialized{ false };
 	int _frameNumber{ 0 };
 	bool stop_rendering{ false };
@@ -62,8 +75,6 @@ public:
 	struct SDL_Window* _window{ nullptr };
 
 	DeletionQueue _mainDeletionQueue;
-
-	VmaAllocator _allocator;
 
 	static VulkanEngine& Get();
 
@@ -86,6 +97,7 @@ private:
 	void init_swapchain();
 	void init_commands();
 	void init_sync_structures();
+	void init_descriptors();
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
