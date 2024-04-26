@@ -67,6 +67,11 @@ public:
 	VkPipelineLayout _gradientPipelineLayout;
 	// ---
 
+	// immediate submit structures (also used for imgui)
+	VkFence _immFence;
+	VkCommandBuffer _immCommandBuffer;
+	VkCommandPool _immCommandPool;
+
 	// Engine data
 	bool _isInitialized{ false };
 	int _frameNumber{ 0 };
@@ -90,6 +95,10 @@ public:
 
 	void draw_background(VkCommandBuffer cmd);
 
+	void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
+
+	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
+
 	//run main loop
 	void run();
 
@@ -101,6 +110,7 @@ private:
 	void init_descriptors();
 	void init_pipelines();
 	void init_background_pipelines();
+	void init_imgui();
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
