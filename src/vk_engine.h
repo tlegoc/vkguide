@@ -22,6 +22,23 @@ struct FrameData
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 
+// Used for tutorial, TODO Remove
+struct ComputePushConstants {
+	glm::vec4 data1;
+	glm::vec4 data2;
+	glm::vec4 data3;
+	glm::vec4 data4;
+};
+
+struct ComputeEffect {
+	const char* name;
+
+	VkPipeline pipeline;
+	VkPipelineLayout layout;
+
+	ComputePushConstants data;
+};
+
 class VulkanEngine
 {
 public:
@@ -65,6 +82,9 @@ public:
 	VkDescriptorSetLayout _drawImageDescriptorLayout;
 	VkPipeline _gradientPipeline;
 	VkPipelineLayout _gradientPipelineLayout;
+	std::vector<ComputeEffect> backgroundEffects;
+	int currentBackgroundEffect{0};
+
 	// ---
 
 	// immediate submit structures (also used for imgui)
