@@ -1,5 +1,9 @@
 ﻿#include <vk_descriptors.h>
 
+//
+// LAYOUT BUILDER
+//
+
 void DescriptorLayoutBuilder::add_binding(uint32_t binding, VkDescriptorType type)
 {
 	VkDescriptorSetLayoutBinding newbind {};
@@ -33,6 +37,10 @@ VkDescriptorSetLayout DescriptorLayoutBuilder::build(VkDevice device, VkShaderSt
 
 	return set;
 }
+
+//
+// ALLOCATOR
+//
 
 void DescriptorAllocator::init_pool(VkDevice device, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
 {
