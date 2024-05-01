@@ -115,6 +115,8 @@ public:
 
 	void draw_background(VkCommandBuffer cmd);
 
+	void draw_geometry(VkCommandBuffer cmd);
+
 	void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
 
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
@@ -131,6 +133,11 @@ private:
 	void init_pipelines();
 	void init_background_pipelines();
 	void init_imgui();
+
+	VkPipelineLayout _trianglePipelineLayout;
+	VkPipeline _trianglePipeline;
+
+	void init_triangle_pipeline();
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
