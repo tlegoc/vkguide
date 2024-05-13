@@ -124,6 +124,12 @@ public:
 	//run main loop
 	void run();
 
+	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
+
+	void destroy_buffer(const AllocatedBuffer& buffer);
+
+	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices);
+
 private:
 	void init_vulkan();
 	void init_swapchain();
@@ -138,6 +144,15 @@ private:
 	VkPipeline _trianglePipeline;
 
 	void init_triangle_pipeline();
+
+	VkPipelineLayout _meshPipelineLayout;
+	VkPipeline _meshPipeline;
+
+	GPUMeshBuffers rectangle;
+
+	void init_mesh_pipeline();
+
+	void init_default_data();
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();

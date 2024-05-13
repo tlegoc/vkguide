@@ -12,7 +12,9 @@ struct Vertex {
     vec4 color;
 };
 
-layout(buffer_reference, std430) readonly buffer VertexBuffer{
+// NOTE : Declare the buffer type (not actually a binding)
+// buffer_reference : let the compiler know we will use the object from buffer address (our VkDeviceAddress)
+layout(buffer_reference, std430) readonly buffer VertexBuffer {
     Vertex vertices[];
 };
 
