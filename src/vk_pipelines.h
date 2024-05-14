@@ -8,7 +8,8 @@ namespace vkutil
 		VkShaderModule* outShaderModule);
 };
 
-class PipelineBuilder {
+class PipelineBuilder
+{
 public:
 	std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
 
@@ -21,7 +22,10 @@ public:
 	VkPipelineRenderingCreateInfo _renderInfo;
 	VkFormat _colorAttachmentformat;
 
-	PipelineBuilder(){ clear(); }
+	PipelineBuilder()
+	{
+		clear();
+	}
 
 	void clear();
 	void set_shaders(VkShaderModule vertexShader, VkShaderModule fragmentShader);
@@ -33,6 +37,7 @@ public:
 	void set_color_attachment_format(VkFormat format);
 	void set_depth_format(VkFormat format);
 	void disable_depthtest();
+	void enable_depthtest(bool depthWriteEnable, VkCompareOp op);
 
 	VkPipeline build_pipeline(VkDevice device);
 };
