@@ -6,6 +6,7 @@
 #include <vk_types.h>
 #include <utils.h>
 #include <vk_descriptors.h>
+#include <vk_loader.h>
 
 struct FrameData
 {
@@ -23,14 +24,16 @@ struct FrameData
 constexpr unsigned int FRAME_OVERLAP = 2;
 
 // Used for tutorial, TODO Remove
-struct ComputePushConstants {
+struct ComputePushConstants
+{
 	glm::vec4 data1;
 	glm::vec4 data2;
 	glm::vec4 data3;
 	glm::vec4 data4;
 };
 
-struct ComputeEffect {
+struct ComputeEffect
+{
 	const char* name;
 
 	VkPipeline pipeline;
@@ -67,6 +70,7 @@ public:
 
 	//draw resources
 	AllocatedImage _drawImage;
+	AllocatedImage _depthImage;
 	VkExtent2D _drawExtent;
 
 	// Queue
@@ -83,7 +87,7 @@ public:
 	VkPipeline _gradientPipeline;
 	VkPipelineLayout _gradientPipelineLayout;
 	std::vector<ComputeEffect> backgroundEffects;
-	int currentBackgroundEffect{0};
+	int currentBackgroundEffect{ 0 };
 
 	// ---
 
@@ -130,6 +134,8 @@ public:
 
 	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices);
 
+	void destroyMesh(GPUMeshBuffers* meshBuffer);
+
 private:
 	void init_vulkan();
 	void init_swapchain();
@@ -153,6 +159,8 @@ private:
 	void init_mesh_pipeline();
 
 	void init_default_data();
+
+	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();

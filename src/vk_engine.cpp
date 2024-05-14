@@ -18,6 +18,9 @@
 
 #include <VkBootstrap.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
@@ -138,25 +141,7 @@ void VulkanEngine::init_vulkan()
 void VulkanEngine::init_swapchain()
 {
 	create_swapchain(_windowExtent.width, _windowExtent.height);
-}
 
-void VulkanEngine::init_commands()
-{
-	//create a command pool for commands submitted to the graphics queue.
-	//we also want the pool to allow for resetting of individual command buffers
-	VkCommandPoolCreateInfo commandPoolInfo =
-		vkinit::command_pool_create_info(_graphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-
-	for (auto& _frame : _frames)
-	{
-
-		VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_frame._commandPool));
-
-		// allocate the default command buffer that we will use for rendering
-		VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(_frame._commandPool, 1);
-
-		VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &_frame._mainCommandBuffer));
-	}
 
 	//draw image size will match the window
 	VkExtent3D drawImageExtent = {
@@ -191,12 +176,49 @@ void VulkanEngine::init_commands()
 
 	VK_CHECK(vkCreateImageView(_device, &rview_info, nullptr, &_drawImage.imageView));
 
-	//add to deletion queues
-	_mainDeletionQueue.push_function([=, this]()
+	_depthImage.imageFormat = VK_FORMAT_D32_SFLOAT;
+	_depthImage.imageExtent = drawImageExtent;
+	VkImageUsageFlags depthImageUsages{};
+	depthImageUsages |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+	VkImageCreateInfo dimg_info = vkinit::image_create_info(_depthImage.imageFormat, depthImageUsages, drawImageExtent);
+
+	//allocate and create the image
+	vmaCreateImage(_allocator, &dimg_info, &rimg_allocinfo, &_depthImage.image, &_depthImage.allocation, nullptr);
+
+	//build a image-view for the draw image to use for rendering
+	VkImageViewCreateInfo dview_info =
+		vkinit::imageview_create_info(_depthImage.imageFormat, _depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+	VK_CHECK(vkCreateImageView(_device, &dview_info, nullptr, &_depthImage.imageView));
+
+	_mainDeletionQueue.push_function([=]()
 	{
 	  vkDestroyImageView(_device, _drawImage.imageView, nullptr);
 	  vmaDestroyImage(_allocator, _drawImage.image, _drawImage.allocation);
+
+	  vkDestroyImageView(_device, _depthImage.imageView, nullptr);
+	  vmaDestroyImage(_allocator, _depthImage.image, _depthImage.allocation);
 	});
+}
+
+void VulkanEngine::init_commands()
+{
+	//create a command pool for commands submitted to the graphics queue.
+	//we also want the pool to allow for resetting of individual command buffers
+	VkCommandPoolCreateInfo commandPoolInfo =
+		vkinit::command_pool_create_info(_graphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
+	for (auto& _frame : _frames)
+	{
+
+		VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_frame._commandPool));
+
+		// allocate the default command buffer that we will use for rendering
+		VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(_frame._commandPool, 1);
+
+		VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &_frame._mainCommandBuffer));
+	}
 
 	// Immediate
 	VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_immCommandPool));
@@ -331,7 +353,9 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 	//launch a draw command to draw 3 vertices
 	vkCmdDraw(cmd, 3, 1, 0, 0);
 
-	// Rendering mesh
+	//
+	//
+	// Rendering rectangle mesh
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _meshPipeline);
 
 	GPUDrawPushConstants push_constants;
@@ -347,6 +371,32 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 	vkCmdBindIndexBuffer(cmd, rectangle.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
 	vkCmdDrawIndexed(cmd, 6, 1, 0, 0, 0);
+
+	//
+	//
+	// Our gltf mesh
+	push_constants.vertexBuffer = testMeshes[2]->meshBuffers.vertexBufferAddress;
+
+	glm::mat4 view = glm::translate(glm::vec3{ 0, 0, -5 });
+	// camera projection
+	glm::mat4 projection =
+		glm::perspective(glm::radians(70.f), (float)_drawExtent.width / (float)_drawExtent.height, 10000.f, 0.1f);
+
+	// invert the Y direction on projection matrix so that we are more similar
+	// to opengl and gltf axis
+	projection[1][1] *= -1;
+
+	push_constants.worldMatrix = projection * view;
+
+	vkCmdPushConstants(cmd,
+		_meshPipelineLayout,
+		VK_SHADER_STAGE_VERTEX_BIT,
+		0,
+		sizeof(GPUDrawPushConstants),
+		&push_constants);
+	vkCmdBindIndexBuffer(cmd, testMeshes[2]->meshBuffers.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(cmd, testMeshes[2]->surfaces[0].count, 1, testMeshes[2]->surfaces[0].startIndex, 0, 0);
 
 	vkCmdEndRendering(cmd);
 }
@@ -915,21 +965,21 @@ void VulkanEngine::init_triangle_pipeline()
 	VkShaderModule triangleFragShader;
 	if (!vkutil::load_shader_module("../shaders/colored_triangle.frag.spv", _device, &triangleFragShader))
 	{
-		fmt::print("Error when building the triangle fragment shader module");
+		fmt::println("Error when building the triangle fragment shader module");
 	}
 	else
 	{
-		fmt::print("Triangle fragment shader succesfully loaded");
+		fmt::println("Triangle fragment shader succesfully loaded");
 	}
 
 	VkShaderModule triangleVertexShader;
 	if (!vkutil::load_shader_module("../shaders/colored_triangle.vert.spv", _device, &triangleVertexShader))
 	{
-		fmt::print("Error when building the triangle vertex shader module");
+		fmt::println("Error when building the triangle vertex shader module");
 	}
 	else
 	{
-		fmt::print("Triangle vertex shader succesfully loaded");
+		fmt::println("Triangle vertex shader succesfully loaded");
 	}
 
 	//build the pipeline layout that controls the inputs/outputs of the shader
@@ -1073,7 +1123,23 @@ void VulkanEngine::init_default_data()
 	// Note : tutorial didn't specify this
 	_mainDeletionQueue.push_function([&]()
 	{
-	  destroy_buffer(this->rectangle.indexBuffer);
-	  destroy_buffer(this->rectangle.vertexBuffer);
+	  destroyMesh(&this->rectangle);
 	});
+
+	testMeshes = loadGltfMeshes(this, "..\\assets\\basicmesh.glb").value();
+
+	// Same
+	_mainDeletionQueue.push_function([&]()
+	{
+	  for (int i = 0; i < testMeshes.size(); i++)
+	  {
+		  unloadGltfMesh(this, testMeshes[i].get());
+	  }
+	});
+}
+
+void VulkanEngine::destroyMesh(GPUMeshBuffers* meshBuffer)
+{
+	destroy_buffer(meshBuffer->indexBuffer);
+	destroy_buffer(meshBuffer->vertexBuffer);
 }
