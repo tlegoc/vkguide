@@ -56,6 +56,7 @@ public:
 	// Swapchain
 	VkSwapchainKHR _swapchain;
 	VkFormat _swapchainImageFormat;
+	bool m_resize_requested;
 
 	std::vector<VkImage> _swapchainImages;
 	std::vector<VkImageView> _swapchainImageViews;
@@ -72,6 +73,7 @@ public:
 	AllocatedImage _drawImage;
 	AllocatedImage _depthImage;
 	VkExtent2D _drawExtent;
+	float m_renderScale = 1.f;
 
 	// Queue
 	VkQueue _graphicsQueue;
@@ -164,4 +166,5 @@ private:
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
+	void resize_swapchain();
 };
