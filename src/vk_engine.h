@@ -19,6 +19,8 @@ struct FrameData
 	VkFence _renderFence;
 
 	DeletionQueue _deletionQueue;
+
+	DescriptorAllocatorGrowable _frameDescriptors;
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -74,6 +76,8 @@ public:
 	AllocatedImage _depthImage;
 	VkExtent2D _drawExtent;
 	float m_renderScale = 1.f;
+	GPUSceneData sceneData;
+	VkDescriptorSetLayout _gpuSceneDataDescriptorLayout;
 
 	// Queue
 	VkQueue _graphicsQueue;
