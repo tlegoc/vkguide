@@ -409,7 +409,11 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 	VkDescriptorSet imageSet = get_current_frame()._frameDescriptors.allocate(_device, _singleImageDescriptorLayout);
 	{
 		DescriptorWriter writer;
-		writer.write_image(0, _errorCheckerboardImage.imageView, _defaultSamplerNearest, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		writer.write_image(0,
+			_errorCheckerboardImage.imageView,
+			_defaultSamplerNearest,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
 		writer.update_set(_device, imageSet);
 	}
@@ -421,7 +425,8 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 	// Our gltf mesh
 	push_constants.vertexBuffer = testMeshes[2]->meshBuffers.vertexBufferAddress;
 
-	glm::mat4 view = glm::translate(glm::vec3{ 0, 0, -5 });
+	glm::vec3 pos = glm::vec3(glm::cos(_frameNumber / 1000.0f) * 5.0, 0, glm::sin(_frameNumber / 1000.0f) * 5.0);
+	glm::mat4 view = glm::lookAt(glm::vec3(0), pos, glm::vec3(0, 1, 0)) * glm::translate(pos);
 	// camera projection
 	glm::mat4 projection =
 		glm::perspective(glm::radians(70.f), (float)_drawExtent.width / (float)_drawExtent.height, 10000.f, 0.1f);
