@@ -48,7 +48,7 @@ class VulkanEngine
 {
 public:
 
-	// Instance
+	// Vulkan context
 	VkInstance _instance;
 	VkDebugUtilsMessengerEXT _debugMessenger;
 	VkPhysicalDevice _physicalDevice;
@@ -64,6 +64,7 @@ public:
 	std::vector<VkImageView> _swapchainImageViews;
 	VkExtent2D _swapchainExtent;
 
+	// Per frame data
 	FrameData _frames[FRAME_OVERLAP];
 
 	FrameData& get_current_frame()
@@ -79,14 +80,14 @@ public:
 	GPUSceneData sceneData;
 	VkDescriptorSetLayout _gpuSceneDataDescriptorLayout;
 
-	// Queue
+	// Queues
 	VkQueue _graphicsQueue;
 	uint32_t _graphicsQueueFamily;
 
 	// VMA
 	VmaAllocator _allocator;
 
-	// Tutorial compute shader related, TODO Remove ?
+	// Tutorial TODO Remove ?
 	DescriptorAllocator globalDescriptorAllocator;
 	VkDescriptorSet _drawImageDescriptors;
 	VkDescriptorSetLayout _drawImageDescriptorLayout;
@@ -94,6 +95,24 @@ public:
 	VkPipelineLayout _gradientPipelineLayout;
 	std::vector<ComputeEffect> backgroundEffects;
 	int currentBackgroundEffect{ 0 };
+	VkPipelineLayout _trianglePipelineLayout;
+	VkPipeline _trianglePipeline;
+	GPUMeshBuffers rectangle;
+	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
+	VkDescriptorSetLayout _singleImageDescriptorLayout;
+
+	// Default data
+	AllocatedImage _whiteImage;
+	AllocatedImage _blackImage;
+	AllocatedImage _greyImage;
+	AllocatedImage _errorCheckerboardImage;
+
+	VkSampler _defaultSamplerLinear;
+	VkSampler _defaultSamplerNearest;
+
+	// Helper pipelines
+	VkPipelineLayout _meshPipelineLayout;
+	VkPipeline _meshPipeline;
 
 	// ---
 
@@ -102,7 +121,7 @@ public:
 	VkCommandBuffer _immCommandBuffer;
 	VkCommandPool _immCommandPool;
 
-	// Engine data
+	// Engine info
 	bool _isInitialized{ false };
 	int _frameNumber{ 0 };
 	bool stop_rendering{ false };
@@ -142,6 +161,16 @@ public:
 
 	void destroyMesh(GPUMeshBuffers* meshBuffer);
 
+	AllocatedImage create_image(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
+
+	AllocatedImage create_image(void* data,
+		VkExtent3D size,
+		VkFormat format,
+		VkImageUsageFlags usage,
+		bool mipmapped = false);
+
+	void destroy_image(const AllocatedImage& img);
+
 private:
 	void init_vulkan();
 	void init_swapchain();
@@ -151,22 +180,9 @@ private:
 	void init_pipelines();
 	void init_background_pipelines();
 	void init_imgui();
-
-	VkPipelineLayout _trianglePipelineLayout;
-	VkPipeline _trianglePipeline;
-
 	void init_triangle_pipeline();
-
-	VkPipelineLayout _meshPipelineLayout;
-	VkPipeline _meshPipeline;
-
-	GPUMeshBuffers rectangle;
-
 	void init_mesh_pipeline();
-
 	void init_default_data();
-
-	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
