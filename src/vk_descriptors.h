@@ -34,7 +34,7 @@ public:
 		float ratio;
 	};
 
-	void init(VkDevice device, uint32_t initialSets, std::span<PoolSizeRatio> poolRatios);
+	void init(VkDevice device, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios);
 	void clear_pools(VkDevice device);
 	void destroy_pools(VkDevice device);
 
